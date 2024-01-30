@@ -1,4 +1,4 @@
-package com.example.loginskipp
+package com.appopener.loginskipp
 
 import io.flutter.embedding.android.FlutterActivity
 

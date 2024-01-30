@@ -28,19 +28,8 @@ class MyHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Login Skip"),
-      ),
-      body: Center(
-        child: ElevatedButton(
-          onPressed: () {
-            Navigator.push(
-                context, MaterialPageRoute(builder: (context) => MyWebsite()));
-          },
-          child: Text("Open Website"),
-        ),
-      ),
+    return const Scaffold(
+      body: MyWebsite(),
     );
   }
 }
