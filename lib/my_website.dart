@@ -31,7 +31,7 @@ class _MyWebsiteState extends State<MyWebsite> {
             children: [
               InAppWebView(
                 initialUrlRequest: URLRequest(
-                  url: WebUri("https://dante291.github.io/"),
+                  url: WebUri("https://www.appopener.com/"),
                 ),
                 onWebViewCreated: (InAppWebViewController controller) {
                   inAppWebViewController = controller;
