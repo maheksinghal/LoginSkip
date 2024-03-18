@@ -97,6 +97,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.6"
+  external_app_launcher:
+    dependency: "direct main"
+    description:
+      name: external_app_launcher
+      sha256: a80847a8e24cce37f1c953ec20a9600c3b12167e279b5868945e880cea717bf7
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.0.0"
   fake_async:
     dependency: transitive
     description:
@@ -200,6 +208,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.1.4"
+  installed_apps:
+    dependency: "direct main"
+    description:
+      name: installed_apps
+      sha256: b4db1c5a74fbedb2d782f734878e84b156673b332f45a4db71048df5d565f13d
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.5.0"
   js:
     dependency: transitive
     description:
