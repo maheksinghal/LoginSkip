@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:installed_apps/app_info.dart';
 import 'package:installed_apps/installed_apps.dart';
-import 'package:external_app_launcher/external_app_launcher.dart';
 
 class MyInstalledApps extends StatefulWidget {
   const MyInstalledApps({Key? key}) : super(key: key);
@@ -10,10 +9,13 @@ class MyInstalledApps extends StatefulWidget {
   State<MyInstalledApps> createState() => _MyInstalledAppsState();
 }
 
+enum AppFilter { userApps, systemApps, allApps }
+
 class _MyInstalledAppsState extends State<MyInstalledApps> {
   late List<AppInfo> _installedApps;
   late List<AppInfo> _searchResult;
   late TextEditingController _searchController;
+  late String _title = 'Installed Apps';
 
   @override
   void initState() {
@@ -33,14 +35,7 @@ class _MyInstalledAppsState extends State<MyInstalledApps> {
   }
 
   Future<void> _openApp(String packageName) async {
-    final isInstalled = await LaunchApp.isAppInstalled(
-        androidPackageName: packageName, iosUrlScheme: packageName);
-    if (isInstalled) {
-      await LaunchApp.openApp(
-          androidPackageName: packageName, iosUrlScheme: packageName);
-    } else {
-      print('App $packageName is not installed.');
-    }
+    await InstalledApps.startApp(packageName);
   }
 
   void _searchApp(String query) {
@@ -55,6 +50,52 @@ class _MyInstalledAppsState extends State<MyInstalledApps> {
     });
   }
 
+  void _applyFilter(AppFilter filter) {
+    _searchController.clear();
+    switch (filter) {
+      case AppFilter.userApps:
+        _title = 'User Apps';
+        _filterUserApps();
+        break;
+      case AppFilter.systemApps:
+        _title = 'System Apps';
+        _filterSystemApps();
+        break;
+      case AppFilter.allApps:
+        _title = 'All Apps';
+        setState(() {
+          _searchResult = List.from(_installedApps);
+        });
+        break;
+    }
+  }
+
+  Future<void> _filterUserApps() async {
+    List<AppInfo> filteredApps = [];
+    for (var app in _installedApps) {
+      bool? isSystemApp = await InstalledApps.isSystemApp(app.packageName);
+      if (isSystemApp != null && !isSystemApp) {
+        filteredApps.add(app);
+      }
+    }
+    setState(() {
+      _searchResult = filteredApps;
+    });
+  }
+
+  Future<void> _filterSystemApps() async {
+    List<AppInfo> filteredApps = [];
+    for (var app in _installedApps) {
+      bool? isSystemApp = await InstalledApps.isSystemApp(app.packageName);
+      if (isSystemApp != null && isSystemApp) {
+        filteredApps.add(app);
+      }
+    }
+    setState(() {
+      _searchResult = filteredApps;
+    });
+  }
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -63,9 +104,30 @@ class _MyInstalledAppsState extends State<MyInstalledApps> {
 
   @override
   Widget build(BuildContext context) {
+    int count = _searchResult.length; // Count based on filtered apps
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Installed Apps (${_installedApps.length})'),
+        title: Text('$_title ($count)'),
+        actions: [
+          PopupMenuButton<AppFilter>(
+            onSelected: _applyFilter,
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<AppFilter>>[
+              const PopupMenuItem<AppFilter>(
+                value: AppFilter.userApps,
+                child: Text('Show User Apps'),
+              ),
+              const PopupMenuItem<AppFilter>(
+                value: AppFilter.systemApps,
+                child: Text('Show System Apps'),
+              ),
+              const PopupMenuItem<AppFilter>(
+                value: AppFilter.allApps,
+                child: Text('Show All Apps'),
+              ),
+            ],
+          ),
+        ],
       ),
       body: Column(
         children: [
