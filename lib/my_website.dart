@@ -1,9 +1,13 @@
-import 'package:flutter/material.dart';
-import 'package:installed_apps/app_info.dart';
-import 'package:installed_apps/installed_apps.dart';
-import 'custom_fab.dart';
+import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter/material.dart';
+import 'package:receive_sharing_intent/receive_sharing_intent.dart';
+
+import 'apps_view.dart';
+import 'contacts_view.dart';
+import 'custom_fab.dart';
+import 'location_view.dart';
 
 class MyInstalledApps extends StatefulWidget {
   const MyInstalledApps({Key? key}) : super(key: key);
@@ -12,103 +16,63 @@ class MyInstalledApps extends StatefulWidget {
   State<MyInstalledApps> createState() => _MyInstalledAppsState();
 }
 
-enum AppFilter { userApps, systemApps, allApps }
-
-class _MyInstalledAppsState extends State<MyInstalledApps> {
-  late List<AppInfo> _installedApps;
-  late List<AppInfo> _searchResult;
-  late TextEditingController _searchController;
-  String _title = 'Installed Apps';
+class _MyInstalledAppsState extends State<MyInstalledApps>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  String _sharedText = '';
+  String _smartLink = '';
 
   @override
   void initState() {
     super.initState();
-    _installedApps = [];
-    _searchResult = [];
-    _searchController = TextEditingController();
-    _getInstalledApps();
-  }
+    _tabController = TabController(length: 3, vsync: this);
 
-  Future<void> _getInstalledApps() async {
-    List<AppInfo> apps = await InstalledApps.getInstalledApps(false, true);
-    if (mounted) {
-      setState(() {
-        _installedApps = apps;
-        _searchResult = List.from(apps);
-      });
-    }
-  }
-
-  Future<void> _openApp(String packageName) async {
-    await InstalledApps.startApp(packageName);
-  }
-
-  void _searchApp(String query) {
-    List<AppInfo> searchResult = _installedApps.where((app) {
-      String name = app.name.toLowerCase() ?? '';
-      String packageName = app.packageName.toLowerCase();
-      return name.contains(query.toLowerCase()) ||
-          packageName.contains(query.toLowerCase());
-    }).toList();
-    setState(() {
-      _searchResult = searchResult;
+    // Subscribe to shared media stream
+    ReceiveSharingIntent.instance
+        .getInitialMedia()
+        .then((List<SharedMediaFile>? value) {
+      if (value != null && value.isNotEmpty) {
+        _handleSharedMedia(value);
+      }
     });
+
+    // For handling incoming shares while the app is active
+    ReceiveSharingIntent.instance.getMediaStream().listen(
+      (List<SharedMediaFile> value) {
+        if (value.isNotEmpty) {
+          _handleSharedMedia(value);
+        }
+      },
+      onError: (err) {
+        print("getMediaStream error: $err");
+      },
+    );
   }
 
-  void _applyFilter(AppFilter filter) {
-    _searchController.clear();
-    switch (filter) {
-      case AppFilter.userApps:
-        _title = 'User Apps';
-        _filterUserApps();
-        break;
-      case AppFilter.systemApps:
-        _title = 'System Apps';
-        _filterSystemApps();
-        break;
-      case AppFilter.allApps:
-        _title = 'All Apps';
+  void _handleSharedMedia(List<SharedMediaFile> mediaFiles) async {
+    for (SharedMediaFile mediaFile in mediaFiles) {
+      if (mediaFile.path.isNotEmpty) {
+        String sharedText = await _extractTextFromMedia(mediaFile);
+        print(sharedText);
         setState(() {
-          _searchResult = List.from(_installedApps);
+          _sharedText = sharedText;
+          _generateSmartLinkFromSharedText(sharedText);
         });
-        break;
-    }
-  }
-
-  Future<void> _filterUserApps() async {
-    List<AppInfo> filteredApps = [];
-    for (var app in _installedApps) {
-      bool? isSystemApp = await InstalledApps.isSystemApp(app.packageName);
-      if (isSystemApp != null && !isSystemApp) {
-        filteredApps.add(app);
       }
     }
-    if (mounted) {
-      setState(() {
-        _searchResult = filteredApps;
-      });
-    }
   }
 
-  Future<void> _filterSystemApps() async {
-    List<AppInfo> filteredApps = [];
-    for (var app in _installedApps) {
-      bool? isSystemApp = await InstalledApps.isSystemApp(app.packageName);
-      if (isSystemApp != null && isSystemApp) {
-        filteredApps.add(app);
-      }
-    }
-    if (mounted) {
-      setState(() {
-        _searchResult = filteredApps;
-      });
-    }
+  Future<String> _extractTextFromMedia(SharedMediaFile mediaFile) async {
+    return mediaFile.path;
   }
 
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
+  void _generateSmartLinkFromSharedText(String link) async {
+    print(link);
+    String smartLink = await _createSmartLink(link);
+    print(smartLink);
+    setState(() {
+      _smartLink = smartLink;
+    });
   }
 
   void _generateSmartLink() {
@@ -152,6 +116,7 @@ class _MyInstalledAppsState extends State<MyInstalledApps> {
   }
 
   Future<void> _createSmartLinkAndShowDialog(String enteredLink) async {
+    print(enteredLink);
     if (enteredLink.isNotEmpty) {
       // Call the API to generate a smart link
       String smartLink = await _createSmartLink(enteredLink);
@@ -230,74 +195,36 @@ class _MyInstalledAppsState extends State<MyInstalledApps> {
 
   @override
   Widget build(BuildContext context) {
-    int count = _searchResult.length;
+    final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('$_title ($count)'),
-        actions: [
-          PopupMenuButton<AppFilter>(
-            onSelected: _applyFilter,
-            itemBuilder: (BuildContext context) => <PopupMenuEntry<AppFilter>>[
-              const PopupMenuItem<AppFilter>(
-                value: AppFilter.userApps,
-                child: Text('Show User Apps'),
-              ),
-              const PopupMenuItem<AppFilter>(
-                value: AppFilter.systemApps,
-                child: Text('Show System Apps'),
-              ),
-              const PopupMenuItem<AppFilter>(
-                value: AppFilter.allApps,
-                child: Text('Show All Apps'),
-              ),
-            ],
-          ),
-        ],
+        title: const Text('Login Skip'),
       ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Search...',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.clear),
-                  onPressed: () {
-                    _searchController.clear();
-                    _searchApp('');
-                  },
-                ),
-              ),
-              onChanged: _searchApp,
+          SizedBox(height: screenHeight * 0.25),
+          if (_smartLink.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text('Smart link: $_smartLink'),
             ),
+          TabBar(
+            controller: _tabController,
+            tabs: const [
+              Tab(text: 'Get Location'),
+              Tab(text: 'Get Apps'),
+              Tab(text: 'Get Contacts'),
+            ],
           ),
           Expanded(
-            child: ListView.builder(
-              itemCount: _searchResult.length,
-              itemBuilder: (context, index) {
-                final app = _searchResult[index];
-                final icon = app.icon;
-                Widget iconWidget;
-
-                if (icon != null && icon.isNotEmpty) {
-                  iconWidget = Image.memory(icon);
-                } else {
-                  iconWidget = const Icon(Icons.android);
-                }
-
-                return ListTile(
-                  leading: iconWidget,
-                  title: Text(app.name),
-                  subtitle: Text(app.packageName),
-                  onTap: () {
-                    _openApp(app.packageName);
-                  },
-                );
-              },
+            child: TabBarView(
+              controller: _tabController,
+              children: const [
+                LocationView(),
+                AppsView(),
+                ContactsView(),
+              ],
             ),
           ),
         ],
