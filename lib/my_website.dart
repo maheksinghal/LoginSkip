@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
-
+import 'package:flutter/services.dart';
 import 'apps_view.dart';
 import 'contacts_view.dart';
 import 'custom_fab.dart';
@@ -69,7 +69,8 @@ class _MyInstalledAppsState extends State<MyInstalledApps>
   void _generateSmartLinkFromSharedText(String link) async {
     print(link);
     String smartLink = await _createSmartLink(link);
-    print(smartLink);
+    //print(smartLink);
+
     setState(() {
       _smartLink = smartLink;
     });
@@ -146,7 +147,24 @@ class _MyInstalledAppsState extends State<MyInstalledApps>
   Widget _buildSmartLinkGeneratedDialog(String smartLink) {
     return AlertDialog(
       title: const Text('Smart Link Generated'),
-      content: Text('Smart link: $smartLink'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('Smart link: $smartLink'),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: smartLink));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Smart link copied to clipboard.'),
+                ),
+              );
+            },
+            child: const Text('Copy'),
+          ),
+        ],
+      ),
       actions: [
         TextButton(
           onPressed: () {
@@ -180,7 +198,11 @@ class _MyInstalledAppsState extends State<MyInstalledApps>
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = jsonDecode(response.body);
-        return data['shortid'] ?? '';
+        String shortId = data['shortid'] ?? '';
+
+        shortId = 'https://appopener.com/web/$shortId';
+
+        return shortId;
       } else {
         print(
             'Error: Server responded with status code ${response.statusCode}');
@@ -207,7 +229,24 @@ class _MyInstalledAppsState extends State<MyInstalledApps>
           if (_smartLink.isNotEmpty)
             Padding(
               padding: const EdgeInsets.all(8.0),
-              child: Text('Smart link: $_smartLink'),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('Smart link: $_smartLink'),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: _smartLink));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Smart link copied to clipboard.'),
+                        ),
+                      );
+                    },
+                    child: const Text('Copy'),
+                  ),
+                ],
+              ),
             ),
           TabBar(
             controller: _tabController,
