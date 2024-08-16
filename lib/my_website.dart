@@ -8,6 +8,7 @@ import 'apps_view.dart';
 import 'contacts_view.dart';
 import 'custom_fab.dart';
 import 'location_view.dart';
+import 'compass.dart';
 
 class MyInstalledApps extends StatefulWidget {
   const MyInstalledApps({Key? key}) : super(key: key);
@@ -25,7 +26,7 @@ class _MyInstalledAppsState extends State<MyInstalledApps>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 2, vsync: this);
 
     // Subscribe to shared media stream
     ReceiveSharingIntent.instance
@@ -225,7 +226,10 @@ class _MyInstalledAppsState extends State<MyInstalledApps>
       ),
       body: Column(
         children: [
-          SizedBox(height: screenHeight * 0.25),
+          SizedBox(
+            height: screenHeight * 0.5,
+            child: Compass(),
+          ),
           if (_smartLink.isNotEmpty)
             Padding(
               padding: const EdgeInsets.all(8.0),
@@ -252,7 +256,6 @@ class _MyInstalledAppsState extends State<MyInstalledApps>
             controller: _tabController,
             tabs: const [
               Tab(text: 'Get Location'),
-              Tab(text: 'Get Apps'),
               Tab(text: 'Get Contacts'),
             ],
           ),
@@ -261,7 +264,6 @@ class _MyInstalledAppsState extends State<MyInstalledApps>
               controller: _tabController,
               children: const [
                 LocationView(),
-                AppsView(),
                 ContactsView(),
               ],
             ),
