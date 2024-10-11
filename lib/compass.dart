@@ -47,36 +47,28 @@ class _CompassState extends State<Compass> {
   Widget build(BuildContext context) {
     final degrees = calculateDegrees(_magneticEvent.x, _magneticEvent.y);
     final angle = -1 * pi / 180 * degrees;
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.5,
-      width: MediaQuery.of(context).size.width,
-      color: Colors.black,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Text(
-            '${degrees.toStringAsFixed(0)}',
-            style: TextStyle(color: Colors.white),
-          ),
-          Padding(
-            padding: EdgeInsets.all(18.0),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Image.asset("assets/images/cadrant.png"),
-                Transform.rotate(
-                  angle: angle,
-                  child: Image.asset(
-                    "assets/images/compass.png",
-                    scale: 1.1,
-                  ),
-                ),
-              ],
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        /*Text(
+          '${degrees.toStringAsFixed(0)}',
+          style: TextStyle(color: Colors.white),
+        ),*/
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            Image.asset("assets/images/cadrant.png", scale: 7.4),
+            Transform.rotate(
+              angle: angle,
+              child: Image.asset(
+                "assets/images/compass.png",
+                scale: 8.5,
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
+      ],
     );
   }
 }

@@ -45,7 +45,8 @@ class _LocationViewState extends State<LocationView>
     Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high);
     setState(() {
-      _location = 'Lat: ${position.latitude}, Lon: ${position.longitude}';
+      _location = 'Lat: ${position.latitude}, '
+          'Lon: ${position.longitude}';
     });
   }
 
@@ -61,7 +62,10 @@ class _LocationViewState extends State<LocationView>
             child: const Text('Get Location'),
           ),
           const SizedBox(height: 20),
-          Text(_location),
+          Text(
+            _location,
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+          ),
         ],
       ),
     );

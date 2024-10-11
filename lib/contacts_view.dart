@@ -56,10 +56,16 @@ class _ContactsViewState extends State<ContactsView>
       itemBuilder: (context, index) {
         final contact = _contacts[index];
         return ListTile(
-          title: Text(contact.displayName ?? 'No name'),
-          subtitle: Text(contact.phones?.isNotEmpty == true
-              ? contact.phones!.first.value ?? 'No phone'
-              : 'No phone'),
+          title: Text(
+            contact.displayName ?? 'No name',
+            style: TextStyle(color: Colors.white),
+          ),
+          subtitle: Text(
+            contact.phones?.isNotEmpty == true
+                ? contact.phones!.first.value ?? 'No phone'
+                : 'No phone',
+            style: TextStyle(color: Colors.grey),
+          ),
         );
       },
     );
