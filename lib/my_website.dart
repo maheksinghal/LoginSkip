@@ -12,6 +12,7 @@ import 'custom_fab.dart';
 import 'location_view.dart';
 import 'compass.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'notification_filter_view.dart';
 
 class MyInstalledApps extends StatefulWidget {
   const MyInstalledApps({Key? key}) : super(key: key);
@@ -34,7 +35,7 @@ class _MyInstalledAppsState extends State<MyInstalledApps>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
 
     // Subscribe to shared media stream
     ReceiveSharingIntent.instance
@@ -341,6 +342,7 @@ class _MyInstalledAppsState extends State<MyInstalledApps>
                       ),
                     ),
                     _buildTab('Get Contacts', 2),
+                    _buildTab('Notifications', 3),
                   ],
                 ),
                 SizedBox(
@@ -367,6 +369,7 @@ class _MyInstalledAppsState extends State<MyInstalledApps>
                         ),
                       ),
                       ContactsView(),
+                      NotificationFilterView(),
                     ],
                   ),
                 ),

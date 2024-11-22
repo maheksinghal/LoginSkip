@@ -45,6 +45,8 @@ dependencies:
   sensors_plus: ^2.0.1
   url_launcher: ^6.1.8
   qr_code_scanner: ^1.0.0
+  shared_preferences: ^2.2.1
+  notification_listener_service: ^0.3.3
 
 dev_dependencies:
   flutter_test:
