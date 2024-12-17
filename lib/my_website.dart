@@ -4,6 +4,8 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:loginskipp/spanswer_view.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
+import 'package:loginskipp/qr_utils.dart';
+import 'package:loginskipp/qr_image_overlay.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import 'package:flutter/services.dart';
 import 'apps_view.dart';
@@ -31,6 +33,8 @@ class _MyInstalledAppsState extends State<MyInstalledApps>
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
   Barcode? result;
   QRViewController? controller;
+  String? scannedLink; // To store the scanned QR code link
+  bool isCameraPaused = false;
 
   @override
   void initState() {
@@ -72,16 +76,26 @@ class _MyInstalledAppsState extends State<MyInstalledApps>
     }
   }
 
-  void _onQRViewCreated(QRViewController controller) {
-    this.controller = controller;
-    controller.scannedDataStream.listen((scanData) {
-      setState(() {
-        result = scanData; // Capture QR code result
-        _sharedText = result!.code!;
-        _generateSmartLinkFromSharedText(_sharedText);
-      });
+  void _onQRViewCreated(QRViewController qrController) {
+    controller = qrController;
+
+    qrController.scannedDataStream.listen((scanData) {
+      if (scanData.code != null && scannedLink == null) {
+        setState(() {
+          scannedLink = scanData.code;
+          isCameraPaused = true; // Mark the camera as paused
+        });
+
+        // Stop the camera immediately after a successful scan
+        controller?.pauseCamera();
+        print("Camera paused and link fetched: $scannedLink");
+      }
     });
   }
+
+
+
+
 
   Future<void> goToWebPage(String urlString) async {
     final Uri _url = Uri.parse(urlString);
@@ -94,6 +108,21 @@ class _MyInstalledAppsState extends State<MyInstalledApps>
       throw 'Could not launch $_url';
     }
   }
+  void _resetScanner() {
+    setState(() {
+      scannedLink = null; // Reset the scanned link
+      isCameraPaused = false; // Mark the camera as active
+    });
+
+    // Resume the camera after resetting the state
+    if (controller != null) {
+      controller!.resumeCamera();
+      print("Camera resumed");
+    } else {
+      print("Controller is null. Unable to resume camera.");
+    }
+  }
+
 
   Future<String> _extractTextFromMedia(SharedMediaFile mediaFile) async {
     return mediaFile.path;
@@ -279,20 +308,66 @@ class _MyInstalledAppsState extends State<MyInstalledApps>
           SingleChildScrollView(
             child: Column(
               children: [
-                SizedBox(
-                  height: screenHeight * 0.45,
-                  child: QRView(
-                    key: qrKey,
-                    onQRViewCreated: _onQRViewCreated,
-                    overlay: QrScannerOverlayShape(
-                      borderColor: Colors.white,
-                      borderRadius: 10,
-                      borderLength: 30,
-                      borderWidth: 10,
-                      cutOutSize: screenHeight * 0.3,
+                if (scannedLink == null)
+                  SizedBox(
+                    height: screenHeight * 0.45,
+                    child: QRView(
+                      key: qrKey,
+                      onQRViewCreated: _onQRViewCreated,
+                      overlay: QrScannerOverlayShape(
+                        borderColor: Colors.white,
+                        borderRadius: 10,
+                        borderLength: 30,
+                        borderWidth: 10,
+                        cutOutSize: screenHeight * 0.3,
+                      ),
                     ),
                   ),
-                ),
+
+                // Display scanned link and buttons
+                if (scannedLink != null)
+                  Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      width: MediaQuery.of(context).size.width * 0.9,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Scanned Link:',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            scannedLink!,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(fontSize: 14),
+                          ),
+                          const SizedBox(height: 20),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              ElevatedButton(
+                                onPressed: () => goToWebPage(scannedLink!),
+                                child: const Text('Open Link'),
+                              ),
+                              ElevatedButton(
+                                onPressed: _resetScanner,
+                                child: const Text('Go Back'),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 if (_smartLink.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.all(8.0),
