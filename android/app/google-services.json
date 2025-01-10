@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "315628564065",
+    "project_id": "loginskip-bf6ab",
+    "storage_bucket": "loginskip-bf6ab.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:315628564065:android:ed8388489b31c1ced20420",
+        "android_client_info": {
+          "package_name": "com.appopener.loginskipp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBYhKnMicD8d2pDC-w_w9Hje0P8oF6A7I4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
